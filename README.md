@@ -28,7 +28,7 @@ Translates the query into an executable system call.
 
 Example:
 
-User Command: "Create a folder folder1 with files txt1, txt2."
+User Command: "Create a folder folder1 "
 
 Execution: Automatically creates the specified folder with the mentioned files at the designated path.
 
