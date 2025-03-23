@@ -44,9 +44,9 @@
 ![Workflow](Worflow.jpg)
 
 ### 📌 Project Screenshots
-![Screenshot 1](screenshot1.jpg)
-![Screenshot 2](screenshot2.jpg)
-![Screenshot 3](screenshot3.jpg)
+![Screenshot 1](img1.png)
+![Screenshot 2](img2.png)
+
 
 ## 🚀 Installation & Setup
 
