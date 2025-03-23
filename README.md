@@ -1,59 +1,87 @@
-# Ultron-AIAgent-Smart-Automation-for-Your-PC
-The solution is an AI-powered desktop assistant that automates tasks (app control, file management, system settings) using voice/text commands. Built with advanced NLP and automation tools, it works on Windows, macOS, Linux, ensures security, and promotes sustainability. It saves time, boosts productivity, and is user-friendly.
-  
+# Ultron-AIAgent: Smart Automation for Your PC
 
-  <img src="Worflow.jpg" alt="Workflow Image">
+**Ultron-AIAgent** is an AI-powered desktop assistant designed to automate tasks using voice and text commands. It enables seamless app control, file management, and system settings adjustments on **Windows, macOS, and Linux**. With **advanced NLP and automation tools**, Ultron-AIAgent prioritizes **security, productivity, and user-friendliness** while ensuring sustainability.
 
-<h2>Functionalities</h2>
+## 🔥 Features & Functionalities
 
-Authentication & Security:
+### 🔐 Authentication & Security
+- Implements authentication mechanisms to restrict access to sensitive files and actions.
+- Supports **PIN-based authentication** or **face recognition** for critical operations.
+- Ensures unauthorized users cannot perform system-level actions.
 
-Implements authentication mechanisms to restrict access to sensitive files and actions.
+### 🎤 Dual Input Modes
+- Supports **both voice and text commands** for maximum flexibility.
+- Users can choose between **hands-free interaction** or **text-based execution**.
 
-Supports PIN-based authentication or face recognition for critical operations.
+### 🧠 Query Translation with NLU
+- Uses **Natural Language Understanding (NLU)** to interpret user commands.
+- Translates queries into executable system calls.
 
-Ensures unauthorized users cannot perform system-level actions.
+**Example:**
+- **User Command:** "Create a folder named 'Projects'."
+- **Execution:** Automatically creates the folder with the specified name at the designated path.
 
-Dual Input Modes:
+### 📂 File Management via System Calls
+- Uses **system calls** for **faster CRUD (Create, Read, Update, Delete) execution**.
+- Enables efficient **file and folder management** (create, delete, move, rename).
+- Includes **security features** to restrict access to private or sensitive files.
 
-Supports both voice and text commands for flexibility.
+### ⚙️ System Settings Control
+- Controls settings like **volume, brightness, and network** using Python’s `os` and `subprocess` modules.
+- Allows users to modify system settings directly through voice or text.
 
-Allows users to choose between hands-free interaction or text-based execution.
+**Example:**
+- **Command:** "Set brightness to 80%."
+- **Execution:** Adjusts the system brightness accordingly.
 
-Query Translation with NLU:
+### 🤖 Seamless Chatbot Integration
+- Both **file management** and **system settings** can be controlled via the chatbot interface.
+- Provides **real-time feedback** confirming executed actions.
 
-Receives user input through Natural Language Understanding (NLU).
+## 🖼️ Screenshots & Workflow
 
-Translates the query into an executable system call.
+### 📌 Workflow Diagram
+![Workflow](Worflow.jpg)
 
-Example:
+### 📌 Project Screenshots
+![Screenshot 1](screenshot1.jpg)
+![Screenshot 2](screenshot2.jpg)
+![Screenshot 3](screenshot3.jpg)
 
-User Command: "Create a folder folder1 "
+## 🚀 Installation & Setup
 
-Execution: Automatically creates the specified folder with the mentioned files at the designated path.
+1. **Clone the Repository:**
+   ```sh
+   git clone https://github.com/koushalpatil/Ultron-AI-Smart-Automation-for-Your-PC.git
+   cd Ultron-AI-Smart-Automation-for-Your-PC
+   ```
+2. **Install Dependencies:**
+   ```sh
+   pip install -r requirements.txt
+   ```
+3. **Run the Application:**
+   ```sh
+   python final.py
+   ```
 
-File Management via System Calls:
+## 🛠️ Technologies Used
+- **Python** (NLU, automation, system calls)
+- **SpeechRecognition** (voice input processing)
+- **NLTK / spaCy** (Natural Language Processing)
+- **OpenCV** (Face recognition for authentication)
+- **OS & Subprocess** (System control commands)
 
-Uses system calls for faster CRUD (Create, Read, Update, Delete) execution.
+## 💡 Future Enhancements
+- Support for **multiple languages**
+- Integration with **smart home devices**
+- Cloud-based storage for **cross-device automation**
 
-Enables efficient file and folder management (create, delete, move, rename).
+## 🤝 Contributing
+Feel free to contribute! Fork the repository and create a pull request.
 
-Includes security features to restrict access to private or sensitive files.
+## 📄 License
+This project is licensed under the **MIT License**.
 
-System Settings Control:
+---
+> Developed with ❤️ by TechFusion
 
-Controls settings like volume, brightness, and network using Python's os and subprocess modules.
-
-Allows users to modify system settings directly through the chatbot.
-
-Example:
-
-Command: "Set volume to 70%."
-
-Execution: Adjusts the system volume to the specified level.
-
-Seamless Chatbot Integration:
-
-Both file management and system settings can be controlled through the chatbot interface.
-
-Provides real-time feedback confirming the executed actions.
