@@ -1,12 +1,15 @@
 import os
 import shutil
+import speech_recognition as sr
 import google.generativeai as genai
 import re
 import subprocess
-import platform
-import ctypes
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+
+
+import platform
+import ctypes
 
 app = Flask(__name__)  
 CORS(app)  
@@ -106,7 +109,7 @@ def control_volume(action, level=None):
             from comtypes import CLSCTX_ALL
             
             devices = AudioUtilities.GetSpeakers()
-            interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)  # Added underscores
+            interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)  # Fixed attribute name (was .iid)
             volume = cast(interface, POINTER(IAudioEndpointVolume))
             
             if action == "INCREASE":
@@ -138,7 +141,7 @@ def control_volume(action, level=None):
                 volume.SetMasterVolumeLevelScalar(1.0, None)
                 return "🔊 Volume set to maximum (100%)"
                 
-        elif system == "Darwin":  # macOS
+        elif system == "Darwin":  
             if action == "INCREASE":
                 os.system("osascript -e 'set volume output volume (output volume of (get volume settings) + 10)'")
                 return "🔊 Volume increased"
@@ -281,7 +284,7 @@ def control_brightness(action, level=None):
                 
         elif system == "Linux":
             try:
-               
+             
                 backlight_dir = "/sys/class/backlight/"
                 devices = os.listdir(backlight_dir)
                 
@@ -328,7 +331,7 @@ def control_brightness(action, level=None):
                             f.write("0")
                         return "🔅 Brightness set to minimum (0%)"
             except Exception as e:
-                
+               
                 if action == "INCREASE":
                     os.system("xbacklight -inc 10")
                     return "☀ Brightness increased"
@@ -366,21 +369,21 @@ def interpret_command(command):
         parts = command.split()
         operation = parts[0].upper() if parts else ""
         
-        
+      
         if operation == "VOLUME":
             if len(parts) >= 2:
                 action = parts[1].upper()
                 level = int(parts[2]) if len(parts) >= 3 else None
                 return control_volume(action, level)
         
-        
+       
         elif operation == "BRIGHTNESS":
             if len(parts) >= 2:
                 action = parts[1].upper()
                 level = int(parts[2]) if len(parts) >= 3 else None
                 return control_brightness(action, level)
         
-        
+      
         elif operation == "NAVIGATE":
             location_index = command.upper().find("TO ")
             if location_index != -1:
@@ -391,7 +394,7 @@ def interpret_command(command):
                 else:
                     return f"⚠ Path does not exist: {path}"
         
-        
+       
         elif operation == "CREATE":
             if len(parts) >= 2 and parts[1].upper() == "FILE":
                 filepath = " ".join(parts[2:])
@@ -406,7 +409,7 @@ def interpret_command(command):
                 os.makedirs(folderpath, exist_ok=True)
                 return f"📁 Folder '{folderpath}' created successfully."
         
-        
+       
         elif operation == "DELETE":
             if len(parts) >= 2 and parts[1].upper() == "FILE":
                 filepath = " ".join(parts[2:])
@@ -480,41 +483,46 @@ def interpret_command(command):
 
 @app.route('/api/process-command', methods=['POST'])
 def process_command():
-    command = request.json.get('command', '')
-    if not command:
-        return jsonify({"response": "⚠ No command provided."})
-    
+    """Process user commands from frontend."""
     try:
+        data = request.json
+        command = data.get('command', '')
+        
+        if not command:
+            return jsonify({'response': '⚠ No command provided.'}), 400
+        
         gemini_response = get_task_from_gemini(command)
         result = interpret_command(gemini_response)
-        return jsonify({"response": result})
+        
+        return jsonify({'response': result})
+        
     except Exception as e:
-        return jsonify({"response": f"⚠ Error: {str(e)}"})
-
+        return jsonify({'response': f'⚠ Error processing command: {str(e)}'}), 500
 
 @app.route('/api/get-help', methods=['GET'])
-def get_help():
+def get_help_info():
+    """Provide help information to frontend."""
     help_info = {
         "basic_commands": [
             "Create a file example.txt",
-            "Delete file example.txt", 
-            "Rename file from old.txt to new.txt",
-            "Move file from source.txt to destination.txt",
+            "Delete file example.txt",
             "Create a folder Projects",
             "Delete folder Projects",
-            "Navigate to [path]"
+            "Increase volume",
+            "Decrease brightness"
         ],
         "advanced_commands": [
-            "Increase volume",
-            "Decrease volume",
+            "Rename file from old.txt to new.txt",
+            "Move file from source.txt to destination.txt",
+            "Navigate to C:\\Users\\Documents",
+            "Create a file report.txt in D:\\Work",
             "Set volume to 50 percent",
-            "Increase brightness",
-            "Decrease brightness",
-            "Set brightness to 70 percent",
-            "Create a file report.txt in D:\\Work"
+            "Set brightness to maximum"
         ]
     }
     return jsonify(help_info)
 
 if __name__ == "__main__":  
+    print("🚀 Voice File Manager API started")
+    print("📡 Listening at http://localhost:5000")
     app.run(host='0.0.0.0', port=5000, debug=True)
