@@ -1,20 +1,17 @@
 import os
 import shutil
-import speech_recognition as sr
 import google.generativeai as genai
 import re
 import subprocess
+import platform
+import ctypes
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
+app = Flask(__name__)  # Fixed underscores
+CORS(app)  # Enable CORS for all routes
 
-import platform
-import ctypes
-
-app = Flask(__name__)  
-CORS(app)  
-
-GENAI_API_KEY = "AIzaSyDVnlwTjLMGOX-hcDikThlfg0mD6goSGmQ"
+GENAI_API_KEY = "AIzaSyAIaAMue0CF6QAd0H_kdKV6g9dvZm3Y_gs"
 genai.configure(api_key=GENAI_API_KEY)
 
 model = genai.GenerativeModel("gemini-1.5-pro-latest")
@@ -109,7 +106,7 @@ def control_volume(action, level=None):
             from comtypes import CLSCTX_ALL
             
             devices = AudioUtilities.GetSpeakers()
-            interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)  # Fixed attribute name (was .iid)
+            interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
             volume = cast(interface, POINTER(IAudioEndpointVolume))
             
             if action == "INCREASE":
@@ -141,7 +138,7 @@ def control_volume(action, level=None):
                 volume.SetMasterVolumeLevelScalar(1.0, None)
                 return "🔊 Volume set to maximum (100%)"
                 
-        elif system == "Darwin":  
+        elif system == "Darwin":  # macOS
             if action == "INCREASE":
                 os.system("osascript -e 'set volume output volume (output volume of (get volume settings) + 10)'")
                 return "🔊 Volume increased"
@@ -234,7 +231,7 @@ def control_brightness(action, level=None):
                         return "🔅 Brightness set to minimum (0%)"
                         
             except ImportError:
-                
+                # Fallback using PowerShell
                 if action == "INCREASE":
                     subprocess.run(["powershell", "-command", "(Get-WmiObject -Namespace root/WMI -Class WmiMonitorBrightnessMethods).WmiSetBrightness(1,10)"], 
                                  capture_output=True)
@@ -260,7 +257,7 @@ def control_brightness(action, level=None):
                                  capture_output=True)
                     return "🔅 Brightness set to minimum (0%)"
                 
-        elif system == "Darwin": 
+        elif system == "Darwin":  # macOS
             if action == "INCREASE":
                 os.system("brightness -i 10")
                 return "☀ Brightness increased"
@@ -284,7 +281,7 @@ def control_brightness(action, level=None):
                 
         elif system == "Linux":
             try:
-             
+                # Find the first backlight device
                 backlight_dir = "/sys/class/backlight/"
                 devices = os.listdir(backlight_dir)
                 
@@ -331,7 +328,7 @@ def control_brightness(action, level=None):
                             f.write("0")
                         return "🔅 Brightness set to minimum (0%)"
             except Exception as e:
-               
+                # Fallback for Linux using xbacklight
                 if action == "INCREASE":
                     os.system("xbacklight -inc 10")
                     return "☀ Brightness increased"
@@ -369,21 +366,21 @@ def interpret_command(command):
         parts = command.split()
         operation = parts[0].upper() if parts else ""
         
-      
+        # Handle volume control commands
         if operation == "VOLUME":
             if len(parts) >= 2:
                 action = parts[1].upper()
                 level = int(parts[2]) if len(parts) >= 3 else None
                 return control_volume(action, level)
         
-       
+        # Handle brightness control commands
         elif operation == "BRIGHTNESS":
             if len(parts) >= 2:
                 action = parts[1].upper()
                 level = int(parts[2]) if len(parts) >= 3 else None
                 return control_brightness(action, level)
         
-      
+        # Handle navigation commands
         elif operation == "NAVIGATE":
             location_index = command.upper().find("TO ")
             if location_index != -1:
@@ -394,7 +391,7 @@ def interpret_command(command):
                 else:
                     return f"⚠ Path does not exist: {path}"
         
-       
+        # Handle file/folder creation
         elif operation == "CREATE":
             if len(parts) >= 2 and parts[1].upper() == "FILE":
                 filepath = " ".join(parts[2:])
@@ -409,7 +406,7 @@ def interpret_command(command):
                 os.makedirs(folderpath, exist_ok=True)
                 return f"📁 Folder '{folderpath}' created successfully."
         
-       
+        # Handle file/folder deletion
         elif operation == "DELETE":
             if len(parts) >= 2 and parts[1].upper() == "FILE":
                 filepath = " ".join(parts[2:])
@@ -427,7 +424,7 @@ def interpret_command(command):
                 else:
                     return f"⚠ Folder does not exist: {folderpath}"
         
-      
+        # Handle file/folder renaming
         elif operation == "RENAME":
             if "FROM" in command.upper() and "TO" in command.upper():
                 from_index = command.upper().find("FROM ")
@@ -451,7 +448,7 @@ def interpret_command(command):
                     else:
                         return f"⚠ Source path does not exist: {old_path}"
         
-       
+        # Handle file/folder moving
         elif operation == "MOVE":
             if "FROM" in command.upper() and "TO" in command.upper():
                 from_index = command.upper().find("FROM ")
@@ -480,49 +477,44 @@ def interpret_command(command):
     except Exception as e:
         return f"⚠ Error: {e}"
 
-
+# Flask API endpoint to process commands
 @app.route('/api/process-command', methods=['POST'])
 def process_command():
-    """Process user commands from frontend."""
+    command = request.json.get('command', '')
+    if not command:
+        return jsonify({"response": "⚠ No command provided."})
+    
     try:
-        data = request.json
-        command = data.get('command', '')
-        
-        if not command:
-            return jsonify({'response': '⚠ No command provided.'}), 400
-        
         gemini_response = get_task_from_gemini(command)
         result = interpret_command(gemini_response)
-        
-        return jsonify({'response': result})
-        
+        return jsonify({"response": result})
     except Exception as e:
-        return jsonify({'response': f'⚠ Error processing command: {str(e)}'}), 500
+        return jsonify({"response": f"⚠ Error: {str(e)}"})
 
+# Flask API endpoint to provide help information
 @app.route('/api/get-help', methods=['GET'])
-def get_help_info():
-    """Provide help information to frontend."""
+def get_help():
     help_info = {
         "basic_commands": [
             "Create a file example.txt",
-            "Delete file example.txt",
-            "Create a folder Projects",
-            "Delete folder Projects",
-            "Increase volume",
-            "Decrease brightness"
-        ],
-        "advanced_commands": [
+            "Delete file example.txt", 
             "Rename file from old.txt to new.txt",
             "Move file from source.txt to destination.txt",
-            "Navigate to C:\\Users\\Documents",
-            "Create a file report.txt in D:\\Work",
+            "Create a folder Projects",
+            "Delete folder Projects",
+            "Navigate to [path]"
+        ],
+        "advanced_commands": [
+            "Increase volume",
+            "Decrease volume",
             "Set volume to 50 percent",
-            "Set brightness to maximum"
+            "Increase brightness",
+            "Decrease brightness",
+            "Set brightness to 70 percent",
+            "Create a file report.txt in D:\\Work"
         ]
     }
     return jsonify(help_info)
 
-if __name__ == "__main__":  
-    print("🚀 Voice File Manager API started")
-    print("📡 Listening at http://localhost:5000")
+if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)
